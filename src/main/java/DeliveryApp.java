@@ -10,6 +10,11 @@ public class DeliveryApp {
     private static List<Parcel> allParcels = new ArrayList<>();
     private static List<Parcel> allTrackableParcels = new ArrayList<>();
 
+    //Создаем коробки
+    private static ParcelBox boxForStandard = new ParcelBox<>(36);
+    private static ParcelBox boxForParishable = new ParcelBox<>(36);
+    private static ParcelBox boxForFragile = new ParcelBox<>(36);
+
     public static void main(String[] args) {
         boolean running = true;
         while (running) {
@@ -65,14 +70,39 @@ public class DeliveryApp {
             //scanner.nextLine();
 
             if(parcelType == 1) {
-                allParcels.add(new StandardParcel(description, weight, deliveryAddress, sendDay));
+                if(boxForStandard.freeWeight()>weight) {
+                    StandardParcel parcel = new StandardParcel(description, weight, deliveryAddress, sendDay);
+
+                    allParcels.add(parcel);
+                    boxForStandard.addParcel(parcel);
+                } else {
+                    System.out.println("В такая посылка не поместится, сейчас в коробку для " +
+                            "стандартных посылок можно добавить не более " + boxForStandard.freeWeight() + "кг.");
+                    return;
+                }
             } else if(parcelType == 2) {
-                int timeToLive = Integer.parseInt(scanner.nextLine());
-                PerishableParcel perishableParcel = new PerishableParcel(description, weight,
-                        deliveryAddress, sendDay, timeToLive);
-                allParcels.add(perishableParcel);
+                if(boxForParishable.freeWeight()>weight) {
+                    int timeToLive = Integer.parseInt(scanner.nextLine());
+                    PerishableParcel parcel = new PerishableParcel(description, weight,
+                            deliveryAddress, sendDay, timeToLive);
+
+                    allParcels.add(parcel);
+                    boxForParishable.addParcel(parcel);
+                } else {
+                    System.out.println("В такая посылка не поместится, сейчас в коробку для " +
+                            "скоропортящихся посылок можно добавить не более " + boxForParishable.freeWeight() + "кг.");
+                    return;
+                }
             } else if(parcelType == 3) {
-                allTrackableParcels.add(new FragileParcel(description, weight, deliveryAddress, sendDay));
+                if(boxForFragile.freeWeight()>weight) {
+                    FragileParcel parcel = new FragileParcel(description, weight, deliveryAddress, sendDay);
+                    allTrackableParcels.add(parcel);
+                    boxForFragile.addParcel(parcel);
+                } else {
+                    System.out.println("В такая посылка не поместится, сейчас в коробку для " +
+                            "хрупких посылок можно добавить не более " + boxForFragile.freeWeight() + "кг.");
+                    return;
+                }
             } else {
                 System.out.println("Такой команды не существует.");
                 return;
