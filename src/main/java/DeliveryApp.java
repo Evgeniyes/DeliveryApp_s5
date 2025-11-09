@@ -79,12 +79,11 @@ public class DeliveryApp {
             System.out.println("Добавить посылку не удалось");
             System.out.println("-".repeat(25));
         }
-
     }
 
     private static boolean addParcelInBox(int parcelType, int weight, ParcelBox box) {
 
-        if (box.freeWeight() > weight) {
+        //if (box.freeWeight() > weight) {
             System.out.println("Введите описание посылки:");
             String description = scanner.nextLine();
             System.out.println("Введите адрес доставки:");
@@ -92,31 +91,34 @@ public class DeliveryApp {
             System.out.println("Введите день отправки:");
             int sendDay = Integer.parseInt(scanner.nextLine());
 
+            Parcel curParcel = null;
+
             if (parcelType == 1) {
-                FragileParcel parcel = new FragileParcel(description, weight, deliveryAddress, sendDay);
-                allParcels.add(parcel);
-                box.addParcel(parcel);
-                return true;
+                curParcel = new StandardParcel(description, weight, deliveryAddress, sendDay);
             } else if (parcelType == 2) {
                 System.out.println("Введите срок годности в днях:");
                 int timeToLive = Integer.parseInt(scanner.nextLine());
-                PerishableParcel parcel = new PerishableParcel(description, weight,
+                curParcel = new PerishableParcel(description, weight,
                         deliveryAddress, sendDay, timeToLive);
-                allParcels.add(parcel);
-                box.addParcel(parcel);
-                return true;
             } else if (parcelType == 3) {
-                FragileParcel parcel = new FragileParcel(description, weight, deliveryAddress, sendDay);
-                allTrackableParcels.add(parcel);
-                box.addParcel(parcel);
+                curParcel = new FragileParcel(description, weight, deliveryAddress, sendDay);
+            }
+
+            if(curParcel == null) {
+                return false;
+            }
+
+            if(box.addParcel(curParcel)){
+                if(parcelType == 3){
+                    allTrackableParcels.add(curParcel);
+                } else {
+                    allParcels.add(curParcel);
+                }
                 return true;
             }
-        } else {
-            System.out.println("В коробку с этим типом посылок можно добавить не более "
-                    + box.freeWeight() + " кг.");
-            return false;
-        }
-        return false;
+
+            return  false;
+
     }
 
 

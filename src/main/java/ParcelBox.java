@@ -10,8 +10,15 @@ public class ParcelBox<T extends Parcel> {
         this.maxWeight = maxweight;
     }
 
-    public void addParcel(T parcel){
-        parcelsInBox.add(parcel);
+    public boolean addParcel(T parcel){
+        if(parcel.getWeight() <= freeWeight()){
+            parcelsInBox.add(parcel);
+            return true;
+        } else {
+            System.out.println("В корзине для данного вида посылок свободно " + freeWeight() + " кг.");
+            return false;
+        }
+
     }
 
     public ArrayList<T> getAllParcels(){
