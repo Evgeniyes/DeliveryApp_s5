@@ -82,6 +82,7 @@ public class DeliveryApp {
                 }
             } else if(parcelType == 2) {
                 if(boxForParishable.freeWeight()>weight) {
+                    System.out.println("Введите срок годности в днях:");
                     int timeToLive = Integer.parseInt(scanner.nextLine());
                     PerishableParcel parcel = new PerishableParcel(description, weight,
                             deliveryAddress, sendDay, timeToLive);
