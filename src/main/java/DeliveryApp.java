@@ -1,5 +1,3 @@
-
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -57,64 +55,72 @@ public class DeliveryApp {
     private static void addParcel() {
         // Подсказка: спросите тип посылки и необходимые поля, создайте объект и добавьте в allParcels
 
-            showAddParcelMenu();
-            int parcelType = Integer.parseInt(scanner.nextLine());
+        ParcelBox box = null; //Текущая коробка для добавления
+
+        showAddParcelMenu();
+        int parcelType = Integer.parseInt(scanner.nextLine());
+        System.out.println("Введите вес посылки:");
+        int weight = Integer.parseInt(scanner.nextLine());
+
+        if (parcelType == 1) {
+            box = boxForStandard;
+        } else if (parcelType == 2) {
+            box = boxForParishable;
+        } else if (parcelType == 3) {
+            box = boxForFragile;
+        } else {
+            System.out.println("Такого типа посылки не существует");
+        }
+
+        if (box != null && addParcelInBox(parcelType, weight, box)) {
+            System.out.println("Посылка успешно добавлена");
+            System.out.println("-".repeat(25));
+        } else {
+            System.out.println("Добавить посылку не удалось");
+            System.out.println("-".repeat(25));
+        }
+
+    }
+
+    private static boolean addParcelInBox(int parcelType, int weight, ParcelBox box) {
+
+        if (box.freeWeight() > weight) {
             System.out.println("Введите описание посылки:");
             String description = scanner.nextLine();
             System.out.println("Введите адрес доставки:");
             String deliveryAddress = scanner.nextLine();
-            System.out.println("Введите вес посылки:");
-            int weight = Integer.parseInt(scanner.nextLine());
             System.out.println("Введите день отправки:");
             int sendDay = Integer.parseInt(scanner.nextLine());
-            //scanner.nextLine();
 
-            if(parcelType == 1) {
-                if(boxForStandard.freeWeight()>weight) {
-                    StandardParcel parcel = new StandardParcel(description, weight, deliveryAddress, sendDay);
-
-                    allParcels.add(parcel);
-                    boxForStandard.addParcel(parcel);
-                } else {
-                    System.out.println("В такая посылка не поместится, сейчас в коробку для " +
-                            "стандартных посылок можно добавить не более " + boxForStandard.freeWeight() + "кг.");
-                    return;
-                }
-            } else if(parcelType == 2) {
-                if(boxForParishable.freeWeight()>weight) {
-                    System.out.println("Введите срок годности в днях:");
-                    int timeToLive = Integer.parseInt(scanner.nextLine());
-                    PerishableParcel parcel = new PerishableParcel(description, weight,
-                            deliveryAddress, sendDay, timeToLive);
-
-                    allParcels.add(parcel);
-                    boxForParishable.addParcel(parcel);
-                } else {
-                    System.out.println("В такая посылка не поместится, сейчас в коробку для " +
-                            "скоропортящихся посылок можно добавить не более " + boxForParishable.freeWeight() + "кг.");
-                    return;
-                }
-            } else if(parcelType == 3) {
-                if(boxForFragile.freeWeight()>weight) {
-                    FragileParcel parcel = new FragileParcel(description, weight, deliveryAddress, sendDay);
-                    allTrackableParcels.add(parcel);
-                    boxForFragile.addParcel(parcel);
-                } else {
-                    System.out.println("В такая посылка не поместится, сейчас в коробку для " +
-                            "хрупких посылок можно добавить не более " + boxForFragile.freeWeight() + "кг.");
-                    return;
-                }
-            } else {
-                System.out.println("Такой команды не существует.");
-                return;
+            if (parcelType == 1) {
+                FragileParcel parcel = new FragileParcel(description, weight, deliveryAddress, sendDay);
+                allParcels.add(parcel);
+                box.addParcel(parcel);
+                return true;
+            } else if (parcelType == 2) {
+                System.out.println("Введите срок годности в днях:");
+                int timeToLive = Integer.parseInt(scanner.nextLine());
+                PerishableParcel parcel = new PerishableParcel(description, weight,
+                        deliveryAddress, sendDay, timeToLive);
+                allParcels.add(parcel);
+                box.addParcel(parcel);
+                return true;
+            } else if (parcelType == 3) {
+                FragileParcel parcel = new FragileParcel(description, weight, deliveryAddress, sendDay);
+                allTrackableParcels.add(parcel);
+                box.addParcel(parcel);
+                return true;
             }
-
-        System.out.println("Посылка успешно добавлена");
-        System.out.println("-".repeat(25));
-
+        } else {
+            System.out.println("В коробку с этим типом посылок можно добавить не более "
+                    + box.freeWeight() + " кг.");
+            return false;
+        }
+        return false;
     }
 
-    private static void showAddParcelMenu(){
+
+    private static void showAddParcelMenu() {
         System.out.println("Выберите действие:");
         System.out.println("1 — Добавить стандартную посылку");
         System.out.println("2 — Добавить скоропортящуюся посылку");
@@ -124,13 +130,20 @@ public class DeliveryApp {
 
     private static void sendParcels() {
         // Пройти по allParcels, вызвать packageItem() и deliver()
-        if (!allParcels.isEmpty()) {
+        if (!allParcels.isEmpty() || !allTrackableParcels.isEmpty()) {
             for (Parcel parcel : allParcels) {
                 parcel.packageItem();
                 parcel.deliver();
             }
+
+            for (Parcel parcel : allTrackableParcels) {
+                parcel.packageItem();
+                parcel.deliver();
+            }
+
             System.out.println("Все посылки отправлены");
             allParcels.clear();
+            allTrackableParcels.clear();
         } else {
             System.out.println("Нет посылок для отправки");
         }
@@ -143,12 +156,15 @@ public class DeliveryApp {
         for (Parcel parcel : allParcels) {
             sum += parcel.calculateDeliveryCost();
         }
+        for (Parcel trackableParcel : allTrackableParcels) {
+            sum += trackableParcel.calculateDeliveryCost();
+        }
 
         System.out.println("Стоимость доставки всех посылок = " + sum);
     }
 
-    private static void setReportStatus(){
-        if(!allTrackableParcels.isEmpty()) {
+    private static void setReportStatus() {
+        if (!allTrackableParcels.isEmpty()) {
             for (Parcel parcel : allTrackableParcels) {
                 if (parcel instanceof Trackable) {
                     System.out.println("Введите новую локацию для посылки " + parcel.getDescription());
